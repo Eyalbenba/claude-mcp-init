@@ -14,7 +14,7 @@ A user-friendly command-line interface for configuring Model Context Protocol (M
 
 1. **Clone and install**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Eyalbenba/claude-mcp-init
    cd claude-mcp-init
    ./src/mcp-setup/install-claude-mcp.sh
    ```
@@ -91,6 +91,56 @@ brew install bash
 
 ### Missing API keys
 The `claude-mcp status` command shows exactly which environment variables are missing.
+
+## Contributing
+
+### Adding a New MCP Server
+
+To add support for a new MCP server:
+
+1. **Edit the server definitions** in `src/mcp-setup/claude-mcp`:
+   ```bash
+   # Add to the MCP server arrays
+   MCP_SERVERS[newserver]="New Server Name"
+   MCP_DESCRIPTIONS[newserver]="Description of what this server does"
+   MCP_REQUIREMENTS[newserver]="REQUIRED_ENV_VAR, ANOTHER_VAR"
+   ```
+
+2. **Add configuration function**:
+   ```bash
+   configure_newserver_server() {
+       if claude mcp add "server-name" "$UVX_PATH" \
+           server-package@latest \
+           -e "ENV_VAR=$ENV_VAR" \
+           -t stdio; then
+           print_success "New Server configured successfully"
+       else
+           print_error "Failed to configure New Server"
+           return 1
+       fi
+   }
+   ```
+
+3. **Add to the case statement**:
+   ```bash
+   case "$server_key" in
+       # ... existing servers ...
+       "newserver")
+           configure_newserver_server
+           ;;
+   ```
+
+4. **Update documentation**:
+   - Add the server to the supported servers table in this README
+   - Add any required environment variables to `.env-mcp.example`
+
+5. **Test the integration**:
+   ```bash
+   claude-mcp status    # Should show your new server
+   claude-mcp configure # Should allow configuring it
+   ```
+
+See the Context7 integration as a reference example.
 
 <details>
 <summary>Supported MCP Servers</summary>
