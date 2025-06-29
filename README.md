@@ -1,6 +1,6 @@
-# Claude Code MCP Setup
+# Claude Code MCP Configuration Manager
 
-A user-friendly command-line interface for configuring Model Context Protocol (MCP) servers with Claude Code.
+A lightweight CLI for configuring Model Context Protocol (MCP) servers with Claude Code.
 
 ## Features
 
@@ -9,6 +9,7 @@ A user-friendly command-line interface for configuring Model Context Protocol (M
 - ✅ **Requirement Validation** - Automatically checks if API keys and dependencies are available
 - 🚀 **One-Command Setup** - Install and configure everything with simple commands
 - 🔄 **Server Management** - List, remove, and check status of configured servers
+- 🔐 **Secure Configuration** - Environment-based API key management
 
 ## Quick Setup
 
