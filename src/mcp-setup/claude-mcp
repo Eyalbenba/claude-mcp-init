@@ -145,6 +145,10 @@ MCP_SERVERS[mongodb]="MongoDB Database"
 MCP_DESCRIPTIONS[mongodb]="Interact with MongoDB databases"
 MCP_REQUIREMENTS[mongodb]="MDB_MCP_CONNECTION_STRING"
 
+MCP_SERVERS[context7]="Context7 Code Docs"
+MCP_DESCRIPTIONS[context7]="Up-to-date code documentation for any prompt"
+MCP_REQUIREMENTS[context7]="None (remote server or npm package)"
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -187,7 +191,7 @@ check_requirements() {
 
     # Handle special cases
     case "$requirements" in
-        "None (remote server)")
+        "None (remote server)"|"None (remote server or npm package)")
             return 0
             ;;
         "OPENAI_API_KEY, zen-mcp-server directory")
@@ -314,6 +318,9 @@ configure_server() {
             ;;
         "mongodb")
             configure_mongodb_server
+            ;;
+        "context7")
+            configure_context7_server
             ;;
         *)
             print_error "Unknown server: $server_key"
@@ -487,6 +494,53 @@ configure_mongodb_server() {
         print_error "Failed to configure MongoDB MCP Server"
         return 1
     fi
+}
+
+configure_context7_server() {
+    print_status "Context7 offers multiple connection options:"
+    echo ""
+    echo "1. Remote HTTP server (recommended)"
+    echo "2. Remote SSE server"
+    echo "3. Local npm package"
+    echo ""
+    echo -n "Choose option (1-3): "
+    read -r context7_option
+    
+    case "$context7_option" in
+        "1")
+            if claude mcp add --transport http context7 https://mcp.context7.com/mcp; then
+                print_success "Context7 HTTP MCP Server configured successfully"
+            else
+                print_error "Failed to configure Context7 HTTP MCP Server"
+                return 1
+            fi
+            ;;
+        "2")
+            if claude mcp add --transport sse context7 https://mcp.context7.com/sse; then
+                print_success "Context7 SSE MCP Server configured successfully"
+            else
+                print_error "Failed to configure Context7 SSE MCP Server"
+                return 1
+            fi
+            ;;
+        "3")
+            if claude mcp add context7 -- npx -y @upstash/context7-mcp; then
+                print_success "Context7 Local MCP Server configured successfully"
+            else
+                print_error "Failed to configure Context7 Local MCP Server"
+                return 1
+            fi
+            ;;
+        *)
+            print_error "Invalid option. Using default HTTP server..."
+            if claude mcp add --transport http context7 https://mcp.context7.com/mcp; then
+                print_success "Context7 HTTP MCP Server configured successfully"
+            else
+                print_error "Failed to configure Context7 HTTP MCP Server"
+                return 1
+            fi
+            ;;
+    esac
 }
 
 # =============================================================================

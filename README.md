@@ -105,5 +105,6 @@ The `claude-mcp status` command shows exactly which environment variables are mi
 | **Tavily** | Web search and content extraction | `TAVILY_API_KEY` |
 | **Zen** | Enhanced AI capabilities and workflows | `OPENAI_API_KEY` |
 | **MongoDB** | Database operations | `MDB_MCP_CONNECTION_STRING` |
+| **Context7** | Up-to-date code documentation for any prompt | None (remote server or npm package) |
 
 </details>
