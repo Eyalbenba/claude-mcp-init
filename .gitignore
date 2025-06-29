@@ -1,0 +1,15 @@
+# IDE
+.idea
+.vscode
+
+# Environment files
+.env
+.env-mcp
+
+# MCP server data
+src/mcp-setup/zen-mcp-server/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
