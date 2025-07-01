@@ -1,6 +1,17 @@
 # Claude Code MCP Configuration Manager
 
-A lightweight CLI for configuring Mod  el Context Protocol (MCP) servers with Claude Code.
+A lightweight CLI for configuring Model Context Protocol (MCP) servers with Claude Code.
+
+## Table of Contents
+
+- [Features](#features)
+- [Supported MCP Servers](#supported-mcp-servers)
+- [Quick Setup](#quick-setup)
+- [Commands](#commands)
+- [Environment Variables](#environment-variables)
+- [File Structure](#file-structure)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## Features
 
@@ -10,6 +21,21 @@ A lightweight CLI for configuring Mod  el Context Protocol (MCP) servers with Cl
 - 🚀 **One-Command Setup** - Install and configure everything with simple commands
 - 🔄 **Server Management** - List, remove, and check status of configured servers
 - 🔐 **Secure Configuration** - Environment-based API key management
+
+## Supported MCP Servers
+
+| Server | Description | Requirements |
+|--------|-------------|--------------|
+| **AWS CloudWatch** | Access AWS logs and metrics | `AWS_PROFILE`, `AWS_REGION` |
+| **Snowflake** | Query databases with natural language | `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, etc. |
+| **Linear** | Project management integration | None (remote server) |
+| **GitHub** | Repository and issue management | `GITHUB_PAT` or `GITHUB_TOKEN` |
+| **Notion** | Documentation and knowledge base | `NOTION_API_KEY` |
+| **Tavily** | Web search and content extraction | `TAVILY_API_KEY` |
+| **Zen** | Enhanced AI capabilities and workflows | `OPENAI_API_KEY` |
+| **MongoDB** | Database operations | `MDB_MCP_CONNECTION_STRING` |
+| **Context7** | Up-to-date code documentation for any prompt | None (remote server or npm package) |
+| **Interrupt User** | Ask human for context and additional information | None (uvx package) |
 
 ## Quick Setup
 
@@ -142,21 +168,3 @@ To add support for a new MCP server:
    ```
 
 See the Context7 integration as a reference example.
-
-<details>
-<summary>Supported MCP Servers</summary>
-
-| Server | Description | Requirements |
-|--------|-------------|--------------|
-| **AWS CloudWatch** | Access AWS logs and metrics | `AWS_PROFILE`, `AWS_REGION` |
-| **Snowflake** | Query databases with natural language | `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, etc. |
-| **Linear** | Project management integration | None (remote server) |
-| **GitHub** | Repository and issue management | `GITHUB_PAT` or `GITHUB_TOKEN` |
-| **Notion** | Documentation and knowledge base | `NOTION_API_KEY` |
-| **Tavily** | Web search and content extraction | `TAVILY_API_KEY` |
-| **Zen** | Enhanced AI capabilities and workflows | `OPENAI_API_KEY` |
-| **MongoDB** | Database operations | `MDB_MCP_CONNECTION_STRING` |
-| **Context7** | Up-to-date code documentation for any prompt | None (remote server or npm package) |
-| **Interrupt User** | Ask human for context and additional information | None (uvx package) |
-
-</details>

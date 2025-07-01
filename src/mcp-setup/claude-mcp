@@ -235,6 +235,12 @@ check_requirements() {
             if [ -z "$OPENAI_API_KEY" ]; then
                 return 1
             fi
+            # Check if OPENAI_API_KEY is still a placeholder
+            case "$OPENAI_API_KEY" in
+                "your-"*|"your_"*|*"your-"*|*"placeholder"*|*"change-me"*|*"example"*)
+                    return 1
+                    ;;
+            esac
             # Look for zen-mcp-server in mcp-setup directory
             local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
             local zen_dir="$script_dir/zen-mcp-server"
@@ -253,11 +259,27 @@ check_requirements() {
             case "$server_key" in
                 "github")
                     if [ "$GITHUB_MCP_TYPE" = "copilot" ]; then
-                        [ -n "$GITHUB_PAT" ]
+                        if [ -z "$GITHUB_PAT" ]; then
+                            return 1
+                        fi
+                        # Check if GITHUB_PAT is still a placeholder
+                        case "$GITHUB_PAT" in
+                            "your-"*|"your_"*|*"your-"*|*"placeholder"*|*"change-me"*|*"example"*)
+                                return 1
+                                ;;
+                        esac
                     else
-                        [ -n "$GITHUB_TOKEN" ]
+                        if [ -z "$GITHUB_TOKEN" ]; then
+                            return 1
+                        fi
+                        # Check if GITHUB_TOKEN is still a placeholder
+                        case "$GITHUB_TOKEN" in
+                            "your-"*|"your_"*|*"your-"*|*"placeholder"*|*"change-me"*|*"example"*)
+                                return 1
+                                ;;
+                        esac
                     fi
-                    return $?
+                    return 0
                     ;;
                 *)
                     return 1
@@ -274,6 +296,12 @@ check_requirements() {
                 if [ -z "$var_value" ]; then
                     return 1
                 fi
+                # Check if value is still a placeholder from .env-mcp.example
+                case "$var_value" in
+                    "your-"*|"your_"*|*"your-"*|*"placeholder"*|*"change-me"*|*"example"*)
+                        return 1
+                        ;;
+                esac
             done
             return 0
             ;;
