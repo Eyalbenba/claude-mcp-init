@@ -121,13 +121,29 @@ The `claude-mcp status` command shows exactly which environment variables are mi
 
 ## Contributing
 
-### Adding a New MCP Server
+We welcome contributions! 🎉 Here's how to get started:
 
-To add support for a new MCP server:
+**Quick Start:** Fork → Clone → Test → Submit PR
 
-1. **Edit the server definitions** in `src/mcp-setup/claude-mcp`:
+### 🚀 Ways to Contribute
+- 🐛 **Bug fixes** - Fix issues or improve error handling
+- ✨ **New MCP servers** - Add support for more services  
+- 📚 **Documentation** - Improve guides and examples
+- 🧪 **Testing** - Help validate configurations
+
+### 📋 Contribution Standards
+- **Branch naming:** `feat/server-name` or `bugfix/description`
+- **Test your changes:** Run `claude-mcp status` and `claude-mcp configure`
+- **Follow patterns:** Use existing code style in `src/mcp-setup/claude-mcp`
+- **Update docs:** Add new servers to README table and `.env-mcp.example`
+
+<details>
+<summary>🔧 Adding a New MCP Server</summary>
+
+### Step-by-Step Guide
+
+1. **Define the server** in `src/mcp-setup/claude-mcp`:
    ```bash
-   # Add to the MCP server arrays
    MCP_SERVERS[newserver]="New Server Name"
    MCP_DESCRIPTIONS[newserver]="Description of what this server does"
    MCP_REQUIREMENTS[newserver]="REQUIRED_ENV_VAR, ANOTHER_VAR"
@@ -148,7 +164,7 @@ To add support for a new MCP server:
    }
    ```
 
-3. **Add to the case statement**:
+3. **Wire it up** in the case statement:
    ```bash
    case "$server_key" in
        # ... existing servers ...
@@ -158,13 +174,89 @@ To add support for a new MCP server:
    ```
 
 4. **Update documentation**:
-   - Add the server to the supported servers table in this README
-   - Add any required environment variables to `.env-mcp.example`
+   - Add server to the Supported MCP Servers table above
+   - Add environment variables to `.env-mcp.example`
 
-5. **Test the integration**:
+5. **Test thoroughly**:
    ```bash
    claude-mcp status    # Should show your new server
    claude-mcp configure # Should allow configuring it
    ```
 
-See the Context7 integration as a reference example.
+**Reference:** See the Context7 integration as a complete example.
+
+</details>
+
+<details>
+<summary>💻 Development Setup</summary>
+
+### Quick Setup
+```bash
+# Fork the repo on GitHub, then:
+git clone https://github.com/YOUR-USERNAME/claude-mcp-init
+cd claude-mcp-init
+./src/mcp-setup/install-claude-mcp.sh
+
+# Create test environment
+cp .env-mcp.example .env-mcp
+# Edit .env-mcp with your test credentials
+
+# Test your changes
+claude-mcp status
+claude-mcp configure
+```
+
+### Requirements
+- Bash 4.0+ (auto-installed on macOS via Homebrew)
+- uvx (auto-detected or set `UVX_PATH_OVERRIDE`)
+- Claude Code CLI
+
+</details>
+
+<details>
+<summary>📝 Pull Request Checklist</summary>
+
+### Before Submitting
+- [ ] **Tested locally** - Your changes work with `claude-mcp status` and `claude-mcp configure`
+- [ ] **Documentation updated** - README table and `.env-mcp.example` if adding new server
+- [ ] **Code follows patterns** - Matches existing style and structure
+- [ ] **Branch named correctly** - `feat/server-name` or `bugfix/description`
+- [ ] **Clear commit message** - Explains what and why
+
+### Pull Request Template
+```markdown
+## Changes
+- Brief description of what you added/fixed
+
+## Testing
+- [ ] Tested with `claude-mcp status`
+- [ ] Tested with `claude-mcp configure`
+- [ ] Updated documentation if needed
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New MCP server
+- [ ] Documentation update
+- [ ] Other: ___________
+```
+
+</details>
+
+<details>
+<summary>🤝 Community Guidelines</summary>
+
+### Code of Conduct
+- **Be respectful** and inclusive in all interactions
+- **Help others** learn and contribute
+- **Focus on constructive feedback** in reviews
+- **Assume good intentions** from contributors
+
+### Getting Help
+- **Issues** - Use GitHub Issues for bugs and feature requests
+- **Discussions** - Use GitHub Discussions for questions
+- **Security** - Email security issues privately (see Security section)
+
+### Recognition
+All contributors will be recognized in our release notes and contributor acknowledgments.
+
+</details>
