@@ -41,8 +41,8 @@ A lightweight CLI for configuring Model Context Protocol (MCP) servers with Clau
 
 1. **Clone and install**
    ```bash
-   git clone https://github.com/Eyalbenba/claude-mcp-init
-   cd claude-mcp-init
+   git clone https://github.com/Eyalbenba/claude-code-mcp-init
+   cd claude-code-mcp-init
    ./src/mcp-setup/install-claude-mcp.sh
    ```
 
