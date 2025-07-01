@@ -4,7 +4,7 @@
 
 # Environment files
 .env
-.env-mcp
+src/mcp-setup/.env-mcp
 
 # MCP server data
 src/mcp-setup/zen-mcp-server/

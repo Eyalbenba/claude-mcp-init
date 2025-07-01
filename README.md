@@ -1,6 +1,6 @@
 # Claude Code MCP Configuration Manager
 
-A lightweight CLI for configuring Model Context Protocol (MCP) servers with Claude Code.
+A lightweight CLI for configuring Mod  el Context Protocol (MCP) servers with Claude Code.
 
 ## Features
 
@@ -157,5 +157,6 @@ See the Context7 integration as a reference example.
 | **Zen** | Enhanced AI capabilities and workflows | `OPENAI_API_KEY` |
 | **MongoDB** | Database operations | `MDB_MCP_CONNECTION_STRING` |
 | **Context7** | Up-to-date code documentation for any prompt | None (remote server or npm package) |
+| **Interrupt User** | Ask human for context and additional information | None (uvx package) |
 
 </details>

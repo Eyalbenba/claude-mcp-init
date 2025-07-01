@@ -149,6 +149,10 @@ MCP_SERVERS[context7]="Context7 Code Docs"
 MCP_DESCRIPTIONS[context7]="Up-to-date code documentation for any prompt"
 MCP_REQUIREMENTS[context7]="None (remote server or npm package)"
 
+MCP_SERVERS[interrupt]="Interrupt User"
+MCP_DESCRIPTIONS[interrupt]="Ask human for context and additional information"
+MCP_REQUIREMENTS[interrupt]="None (uvx package)"
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -163,11 +167,44 @@ show_usage() {
     echo "  status       Check MCP server status"
     echo "  help         Show this help message"
     echo ""
+    echo "Scope Options:"
+    echo "  local        Available only to you in the current project (default)"
+    echo "  project      Shared with everyone in the project via .mcp.json file"
+    echo "  user         Available to you across all projects"
+    echo ""
     echo "Examples:"
     echo "  claude-mcp configure"
     echo "  claude-mcp list"
     echo "  claude-mcp remove"
     echo ""
+}
+
+get_scope_selection() {
+    echo "" >&2
+    print_step "Select Configuration Scope:" >&2
+    echo "" >&2
+    echo -e "${WHITE}1.${NC} ${CYAN}local${NC} - Available only to you in the current project (default)" >&2
+    echo -e "${WHITE}2.${NC} ${CYAN}project${NC} - Shared with everyone in the project via .mcp.json file" >&2
+    echo -e "${WHITE}3.${NC} ${CYAN}user${NC} - Available to you across all projects" >&2
+    echo "" >&2
+    echo -n "Choose scope (1-3, default: 1): " >&2
+    read -r scope_choice
+    
+    case "$scope_choice" in
+        "2")
+            echo "project"
+            ;;
+        "3")
+            echo "user"
+            ;;
+        "1"|"")
+            echo "local"
+            ;;
+        *)
+            print_warning "Invalid scope selection. Using default (local)..." >&2
+            echo "local"
+            ;;
+    esac
 }
 
 check_env_file() {
@@ -191,7 +228,7 @@ check_requirements() {
 
     # Handle special cases
     case "$requirements" in
-        "None (remote server)"|"None (remote server or npm package)")
+        "None (remote server)"|"None (remote server or npm package)"|"None (uvx package)")
             return 0
             ;;
         "OPENAI_API_KEY, zen-mcp-server directory")
@@ -290,37 +327,41 @@ show_server_menu() {
 
 configure_server() {
     local server_key="$1"
+    local scope="${2:-local}"
     local server_name="${MCP_SERVERS[$server_key]}"
     
-    print_step "Configuring $server_name..."
+    print_step "Configuring $server_name (scope: $scope)..."
     
     case "$server_key" in
         "aws")
-            configure_aws_server
+            configure_aws_server "$scope"
             ;;
         "snowflake")
-            configure_snowflake_server
+            configure_snowflake_server "$scope"
             ;;
         "linear")
-            configure_linear_server
+            configure_linear_server "$scope"
             ;;
         "notion")
-            configure_notion_server
+            configure_notion_server "$scope"
             ;;
         "github")
-            configure_github_server
+            configure_github_server "$scope"
             ;;
         "tavily")
-            configure_tavily_server
+            configure_tavily_server "$scope"
             ;;
         "zen")
-            configure_zen_server
+            configure_zen_server "$scope"
             ;;
         "mongodb")
-            configure_mongodb_server
+            configure_mongodb_server "$scope"
             ;;
         "context7")
-            configure_context7_server
+            configure_context7_server "$scope"
+            ;;
+        "interrupt")
+            configure_interrupt_server "$scope"
             ;;
         *)
             print_error "Unknown server: $server_key"
@@ -334,8 +375,10 @@ configure_server() {
 # =============================================================================
 
 configure_aws_server() {
+    local scope="${1:-local}"
     if claude mcp add "awslabs.cloudwatch-logs-mcp-server" "$UVX_PATH" \
         awslabs.cloudwatch-logs-mcp-server@latest \
+        -s "$scope" \
         -e "AWS_PROFILE=$AWS_PROFILE" \
         -e "AWS_REGION=$AWS_REGION" \
         -e "FASTMCP_LOG_LEVEL=${FASTMCP_LOG_LEVEL:-INFO}" \
@@ -348,7 +391,9 @@ configure_aws_server() {
 }
 
 configure_snowflake_server() {
+    local scope="${1:-local}"
     if claude mcp add "Snowflake MCP" "$UVX_PATH" \
+        -s "$scope" \
         -e "SNOWFLAKE_ACCOUNT=$SNOWFLAKE_ACCOUNT" \
         -e "SNOWFLAKE_USER=$SNOWFLAKE_USER" \
         -e "SNOWFLAKE_PASSWORD=$SNOWFLAKE_PASSWORD" \
@@ -364,7 +409,8 @@ configure_snowflake_server() {
 }
 
 configure_linear_server() {
-    if claude mcp add Linear -- npx -y mcp-remote https://mcp.linear.app/sse; then
+    local scope="${1:-local}"
+    if claude mcp add Linear -s "$scope" -- npx -y mcp-remote https://mcp.linear.app/sse; then
         print_success "Linear MCP Server configured successfully"
     else
         print_error "Failed to configure Linear MCP Server"
@@ -373,8 +419,10 @@ configure_linear_server() {
 }
 
 configure_notion_server() {
+    local scope="${1:-local}"
     if claude mcp add "notion-mcp-server" "$UVX_PATH" \
         notion-mcp-server@latest \
+        -s "$scope" \
         -e "NOTION_API_KEY=$NOTION_API_KEY" \
         -e "FASTMCP_LOG_LEVEL=${FASTMCP_LOG_LEVEL:-INFO}" \
         -t stdio; then
@@ -386,8 +434,10 @@ configure_notion_server() {
 }
 
 configure_github_server() {
+    local scope="${1:-local}"
     if [ "$GITHUB_MCP_TYPE" = "copilot" ]; then
         if claude mcp add github "https://api.githubcopilot.com/mcp/" \
+            -s "$scope" \
             -t http \
             -H "Authorization: Bearer $GITHUB_PAT"; then
             print_success "GitHub Copilot MCP Server configured successfully"
@@ -398,6 +448,7 @@ configure_github_server() {
     else
         if claude mcp add "github-mcp-server" "$UVX_PATH" \
             github-mcp-server@latest \
+            -s "$scope" \
             -e "GITHUB_TOKEN=$GITHUB_TOKEN" \
             -e "FASTMCP_LOG_LEVEL=${FASTMCP_LOG_LEVEL:-INFO}" \
             -t stdio; then
@@ -410,7 +461,9 @@ configure_github_server() {
 }
 
 configure_tavily_server() {
+    local scope="${1:-local}"
     if claude mcp add "tavily-mcp" "npx" \
+        -s "$scope" \
         -e "TAVILY_API_KEY=$TAVILY_API_KEY" \
         -t stdio -- -y tavily-mcp@latest; then
         print_success "Tavily MCP Server configured successfully"
@@ -421,6 +474,7 @@ configure_tavily_server() {
 }
 
 configure_zen_server() {
+    local scope="${1:-local}"
     # Look for zen-mcp-server in mcp-setup directory
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local zen_dir="$script_dir/zen-mcp-server"
@@ -446,7 +500,7 @@ configure_zen_server() {
         fi
 
         print_status "Running zen's built-in setup and configuration..."
-        print_status "This will automatically configure Claude Code CLI for you"
+        print_status "This will automatically configure Claude Code CLI for you with scope: $scope"
 
         # Let zen handle its own setup and Claude configuration
         # The run-server.sh script will:
@@ -454,9 +508,11 @@ configure_zen_server() {
         # 2. Install dependencies
         # 3. Automatically configure Claude Code CLI
         # 4. We automatically answer "Y" to the prompt
+        # Note: Zen server uses its own configuration method and may not support scope parameter
         if echo "Y" | ./run-server.sh; then
             print_success "Zen MCP Server configured successfully"
             print_status "Zen has been automatically added to Claude Code CLI"
+            print_warning "Note: Zen server uses its own configuration method and may use default scope"
             print_status "You can now use zen commands like:"
             print_status "  'Think deeper about this with zen'"
             print_status "  'Use zen to debug this code'"
@@ -482,8 +538,10 @@ configure_zen_server() {
 }
 
 configure_mongodb_server() {
+    local scope="${1:-local}"
     if claude mcp add "mongodb-mcp-server" "$UVX_PATH" \
         mongodb-mcp-server@latest \
+        -s "$scope" \
         -e "MDB_MCP_CONNECTION_STRING=$MDB_MCP_CONNECTION_STRING" \
         -e "DO_NOT_TRACK=1" \
         -e "MDB_MCP_READ_ONLY=true" \
@@ -497,6 +555,7 @@ configure_mongodb_server() {
 }
 
 configure_context7_server() {
+    local scope="${1:-local}"
     print_status "Context7 offers multiple connection options:"
     echo ""
     echo "1. Remote HTTP server (recommended)"
@@ -508,7 +567,7 @@ configure_context7_server() {
     
     case "$context7_option" in
         "1")
-            if claude mcp add --transport http context7 https://mcp.context7.com/mcp; then
+            if claude mcp add --transport http context7 https://mcp.context7.com/mcp -s "$scope"; then
                 print_success "Context7 HTTP MCP Server configured successfully"
             else
                 print_error "Failed to configure Context7 HTTP MCP Server"
@@ -516,7 +575,7 @@ configure_context7_server() {
             fi
             ;;
         "2")
-            if claude mcp add --transport sse context7 https://mcp.context7.com/sse; then
+            if claude mcp add --transport sse context7 https://mcp.context7.com/sse -s "$scope"; then
                 print_success "Context7 SSE MCP Server configured successfully"
             else
                 print_error "Failed to configure Context7 SSE MCP Server"
@@ -524,7 +583,7 @@ configure_context7_server() {
             fi
             ;;
         "3")
-            if claude mcp add context7 -- npx -y @upstash/context7-mcp; then
+            if claude mcp add context7 -s "$scope" -- npx -y @upstash/context7-mcp; then
                 print_success "Context7 Local MCP Server configured successfully"
             else
                 print_error "Failed to configure Context7 Local MCP Server"
@@ -533,7 +592,7 @@ configure_context7_server() {
             ;;
         *)
             print_error "Invalid option. Using default HTTP server..."
-            if claude mcp add --transport http context7 https://mcp.context7.com/mcp; then
+            if claude mcp add --transport http context7 https://mcp.context7.com/mcp -s "$scope"; then
                 print_success "Context7 HTTP MCP Server configured successfully"
             else
                 print_error "Failed to configure Context7 HTTP MCP Server"
@@ -541,6 +600,19 @@ configure_context7_server() {
             fi
             ;;
     esac
+}
+
+configure_interrupt_server() {
+    local scope="${1:-local}"
+    if claude mcp add "Interrupt User" "$UVX_PATH" \
+        ask-human-for-context-mcp \
+        -s "$scope" \
+        -t stdio; then
+        print_success "Interrupt User MCP Server configured successfully"
+    else
+        print_error "Failed to configure Interrupt User MCP Server"
+        return 1
+    fi
 }
 
 # =============================================================================
@@ -551,6 +623,10 @@ cmd_configure() {
     print_header
     check_env_file
     load_env
+    
+    # Get scope selection upfront for all configurations in this session
+    local session_scope
+    session_scope=$(get_scope_selection)
     
     while true; do
         show_server_menu
@@ -616,16 +692,16 @@ cmd_configure() {
             continue
         fi
         
-        # Configure selected servers
+        # Configure selected servers using the session scope
         echo ""
-        print_step "Configuring ${#servers_to_configure[@]} server(s)..."
+        print_step "Configuring ${#servers_to_configure[@]} server(s) with scope: $session_scope..."
         echo ""
         
         local success_count=0
         local total_count=${#servers_to_configure[@]}
         
         for server_key in "${servers_to_configure[@]}"; do
-            if configure_server "$server_key"; then
+            if configure_server "$server_key" "$session_scope"; then
                 success_count=$((success_count + 1))
             fi
             echo ""
