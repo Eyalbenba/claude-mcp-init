@@ -16,52 +16,89 @@ fi
 set -e  # Exit on any error
 
 # =============================================================================
-# Configuration - Update these paths for your system
+# Configuration - Package Manager Detection
 # =============================================================================
 
-# Path to uvx executable - TEAM MEMBERS: UPDATE THIS FOR YOUR SYSTEM
-# To find your uvx path, run: which uvx
-# Common locations:
-# - macOS (Homebrew): /opt/homebrew/bin/uvx
-# - macOS (manual install): /Users/$(whoami)/.local/bin/uvx
-# - Linux: ~/.local/bin/uvx
-# - If uvx is in your PATH, you can just use: "uvx"
+# Package manager paths and detection
+# Priority: Environment variable > Auto-detection > Fallback
 
-# Auto-detect uvx path or use manual override
-if [ -n "${UVX_PATH_OVERRIDE:-}" ]; then
-    UVX_PATH="$UVX_PATH_OVERRIDE"
-elif command -v uvx >/dev/null 2>&1; then
-    UVX_PATH="uvx"
-elif [ -f "/Users/$(whoami)/.local/bin/uvx" ]; then
-    UVX_PATH="/Users/$(whoami)/.local/bin/uvx"
-elif [ -f "/opt/homebrew/bin/uvx" ]; then
-    UVX_PATH="/opt/homebrew/bin/uvx"
-elif [ -f "/usr/local/bin/uvx" ]; then
-    UVX_PATH="/usr/local/bin/uvx"
-else
-    # Fallback - team members should update this
-    UVX_PATH="/Users/$(whoami)/.local/bin/uvx"
-fi
+detect_package_manager() {
+    # Check if user has set preference in environment
+    if [ -n "${PACKAGE_MANAGER:-}" ]; then
+        echo "$PACKAGE_MANAGER"
+        return
+    fi
+    
+    # Auto-detect available package managers
+    if command -v uvx >/dev/null 2>&1; then
+        echo "uvx"
+    elif command -v npx >/dev/null 2>&1; then
+        echo "npx"
+    else
+        echo "uvx"  # Default fallback
+    fi
+}
+
+# Set package manager paths
+setup_package_manager() {
+    local pkg_manager="$1"
+    
+    case "$pkg_manager" in
+        "uvx")
+            # Auto-detect uvx path or use manual override
+            if [ -n "${UVX_PATH_OVERRIDE:-}" ]; then
+                PACKAGE_PATH="$UVX_PATH_OVERRIDE"
+            elif command -v uvx >/dev/null 2>&1; then
+                PACKAGE_PATH="uvx"
+            elif [ -f "/Users/$(whoami)/.local/bin/uvx" ]; then
+                PACKAGE_PATH="/Users/$(whoami)/.local/bin/uvx"
+            elif [ -f "/opt/homebrew/bin/uvx" ]; then
+                PACKAGE_PATH="/opt/homebrew/bin/uvx"
+            elif [ -f "/usr/local/bin/uvx" ]; then
+                PACKAGE_PATH="/usr/local/bin/uvx"
+            else
+                PACKAGE_PATH="/Users/$(whoami)/.local/bin/uvx"
+            fi
+            
+            # Verify uvx exists
+            if [ "$PACKAGE_PATH" = "uvx" ]; then
+                if ! command -v uvx >/dev/null 2>&1; then
+                    print_error "uvx not found in PATH"
+                    print_status "Install uvx or set PACKAGE_MANAGER=npx in .env-mcp"
+                    print_status "You can find uvx with: which uvx"
+                    exit 1
+                fi
+            elif [ ! -f "$PACKAGE_PATH" ]; then
+                print_error "uvx not found at $PACKAGE_PATH"
+                print_status "Install uvx or set PACKAGE_MANAGER=npx in .env-mcp"
+                exit 1
+            fi
+            ;;
+        "npx")
+            if command -v npx >/dev/null 2>&1; then
+                PACKAGE_PATH="npx"
+            else
+                print_error "npx not found in PATH"
+                print_status "Install Node.js/npm or set PACKAGE_MANAGER=uvx in .env-mcp"
+                exit 1
+            fi
+            ;;
+        *)
+            print_error "Unknown package manager: $pkg_manager"
+            print_status "Set PACKAGE_MANAGER to either 'uvx' or 'npx' in .env-mcp"
+            exit 1
+            ;;
+    esac
+}
+
+# Initialize package manager (will be set after loading environment)
+PACKAGE_MANAGER=""
+PACKAGE_PATH=""
 
 # GitHub MCP Configuration - Choose one:
 # "copilot" = Use GitHub Copilot MCP API (HTTP transport, requires GITHUB_PAT)
 # "uvx" = Use uvx github-mcp-server (stdio transport, requires GITHUB_TOKEN)
 GITHUB_MCP_TYPE="copilot"  # <-- UPDATE THIS: "copilot" or "uvx"
-
-# Verify uvx exists
-if [ "$UVX_PATH" = "uvx" ]; then
-    if ! command -v uvx >/dev/null 2>&1; then
-        echo "Error: uvx not found in PATH"
-        echo "Please install uvx or set UVX_PATH_OVERRIDE environment variable"
-        echo "You can find uvx with: which uvx"
-        exit 1
-    fi
-elif [ ! -f "$UVX_PATH" ]; then
-    echo "Error: uvx not found at $UVX_PATH"
-    echo "Please install uvx or set UVX_PATH_OVERRIDE environment variable"
-    echo "You can find uvx with: which uvx"
-    exit 1
-fi
 
 # =============================================================================
 # Colors and UI
@@ -203,6 +240,30 @@ get_scope_selection() {
         *)
             print_warning "Invalid scope selection. Using default (local)..." >&2
             echo "local"
+            ;;
+    esac
+}
+
+get_package_manager_selection() {
+    echo "" >&2
+    print_step "Select Package Manager:" >&2
+    echo "" >&2
+    echo -e "${WHITE}1.${NC} ${CYAN}uvx${NC} - Fast Python package runner (recommended)" >&2
+    echo -e "${WHITE}2.${NC} ${CYAN}npx${NC} - Node.js package runner (widely available)" >&2
+    echo "" >&2
+    echo -n "Choose package manager (1-2, default: 1): " >&2
+    read -r package_choice
+    
+    case "$package_choice" in
+        "2")
+            echo "npx"
+            ;;
+        "1"|"")
+            echo "uvx"
+            ;;
+        *)
+            print_warning "Invalid package manager selection. Using default (uvx)..." >&2
+            echo "uvx"
             ;;
     esac
 }
@@ -404,7 +465,7 @@ configure_server() {
 
 configure_aws_server() {
     local scope="${1:-local}"
-    if claude mcp add "awslabs.cloudwatch-logs-mcp-server" "$UVX_PATH" \
+    if claude mcp add "awslabs.cloudwatch-logs-mcp-server" "$PACKAGE_PATH" \
         awslabs.cloudwatch-logs-mcp-server@latest \
         -s "$scope" \
         -e "AWS_PROFILE=$AWS_PROFILE" \
@@ -420,7 +481,7 @@ configure_aws_server() {
 
 configure_snowflake_server() {
     local scope="${1:-local}"
-    if claude mcp add "Snowflake MCP" "$UVX_PATH" \
+    if claude mcp add "Snowflake MCP" "$PACKAGE_PATH" \
         -s "$scope" \
         -e "SNOWFLAKE_ACCOUNT=$SNOWFLAKE_ACCOUNT" \
         -e "SNOWFLAKE_USER=$SNOWFLAKE_USER" \
@@ -448,7 +509,7 @@ configure_linear_server() {
 
 configure_notion_server() {
     local scope="${1:-local}"
-    if claude mcp add "notion-mcp-server" "$UVX_PATH" \
+    if claude mcp add "notion-mcp-server" "$PACKAGE_PATH" \
         notion-mcp-server@latest \
         -s "$scope" \
         -e "NOTION_API_KEY=$NOTION_API_KEY" \
@@ -474,7 +535,7 @@ configure_github_server() {
             return 1
         fi
     else
-        if claude mcp add "github-mcp-server" "$UVX_PATH" \
+        if claude mcp add "github-mcp-server" "$PACKAGE_PATH" \
             github-mcp-server@latest \
             -s "$scope" \
             -e "GITHUB_TOKEN=$GITHUB_TOKEN" \
@@ -490,14 +551,29 @@ configure_github_server() {
 
 configure_tavily_server() {
     local scope="${1:-local}"
-    if claude mcp add "tavily-mcp" "npx" \
-        -s "$scope" \
-        -e "TAVILY_API_KEY=$TAVILY_API_KEY" \
-        -t stdio -- -y tavily-mcp@latest; then
-        print_success "Tavily MCP Server configured successfully"
+    if [ "$PACKAGE_MANAGER" = "uvx" ]; then
+        # Use uvx for tavily-mcp (if available)
+        if claude mcp add "tavily-mcp" "$PACKAGE_PATH" \
+            tavily-mcp@latest \
+            -s "$scope" \
+            -e "TAVILY_API_KEY=$TAVILY_API_KEY" \
+            -t stdio; then
+            print_success "Tavily MCP Server configured successfully"
+        else
+            print_error "Failed to configure Tavily MCP Server"
+            return 1
+        fi
     else
-        print_error "Failed to configure Tavily MCP Server"
-        return 1
+        # Use npx for tavily-mcp (original approach)
+        if claude mcp add "tavily-mcp" "npx" \
+            -s "$scope" \
+            -e "TAVILY_API_KEY=$TAVILY_API_KEY" \
+            -t stdio -- -y tavily-mcp@latest; then
+            print_success "Tavily MCP Server configured successfully"
+        else
+            print_error "Failed to configure Tavily MCP Server"
+            return 1
+        fi
     fi
 }
 
@@ -567,7 +643,7 @@ configure_zen_server() {
 
 configure_mongodb_server() {
     local scope="${1:-local}"
-    if claude mcp add "mongodb-mcp-server" "$UVX_PATH" \
+    if claude mcp add "mongodb-mcp-server" "$PACKAGE_PATH" \
         mongodb-mcp-server@latest \
         -s "$scope" \
         -e "MDB_MCP_CONNECTION_STRING=$MDB_MCP_CONNECTION_STRING" \
@@ -611,7 +687,7 @@ configure_context7_server() {
             fi
             ;;
         "3")
-            if claude mcp add context7 -s "$scope" -- npx -y @upstash/context7-mcp; then
+            if claude mcp add context7 -s "$scope" -- "$PACKAGE_PATH" $([ "$PACKAGE_MANAGER" = "npx" ] && echo "-y") @upstash/context7-mcp; then
                 print_success "Context7 Local MCP Server configured successfully"
             else
                 print_error "Failed to configure Context7 Local MCP Server"
@@ -632,7 +708,7 @@ configure_context7_server() {
 
 configure_interrupt_server() {
     local scope="${1:-local}"
-    if claude mcp add "Interrupt User" "$UVX_PATH" \
+    if claude mcp add "Interrupt User" "$PACKAGE_PATH" \
         ask-human-for-context-mcp \
         -s "$scope" \
         -t stdio; then
@@ -651,6 +727,13 @@ cmd_configure() {
     print_header
     check_env_file
     load_env
+    
+    # Setup package manager based on environment preference or user choice
+    if [ -z "${PACKAGE_MANAGER:-}" ]; then
+        PACKAGE_MANAGER=$(get_package_manager_selection)
+    fi
+    setup_package_manager "$PACKAGE_MANAGER"
+    print_status "Using package manager: $PACKAGE_MANAGER ($PACKAGE_PATH)"
     
     # Get scope selection upfront for all configurations in this session
     local session_scope
