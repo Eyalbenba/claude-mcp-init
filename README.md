@@ -48,7 +48,7 @@ A lightweight CLI for configuring Model Context Protocol (MCP) servers with Clau
 
 2. **Configure environment**
    ```bash
-   cp src/mcp-setup/.env-mcp.example .env-mcp
+   cp .env-mcp.example .env-mcp
    # Edit .env-mcp with your API keys
    ```
 
@@ -96,7 +96,6 @@ MDB_MCP_CONNECTION_STRING=your-mongodb-uri
 src/mcp-setup/
 ├── claude-mcp                 # Interactive CLI tool
 ├── install-claude-mcp.sh      # Installation script
-├── .env-mcp.example          # Environment template
 └── zen-mcp-server/           # Advanced AI workflow server
 
 .env-mcp                       # Your API keys (gitignored)
