@@ -28,7 +28,7 @@ A lightweight CLI for configuring Model Context Protocol (MCP) servers with Clau
 - 🔄 **Server Management** - List, remove, and check status of configured servers
 - 🔐 **Secure Configuration** - Environment-based API key management
 
-## Current Supported MCP Servers
+## Currently Supported MCP Servers
 
 | Server | Description | Requirements |
 |--------|-------------|--------------|
