@@ -268,18 +268,53 @@ get_package_manager_selection() {
     esac
 }
 
+# Find .env-mcp file by searching up and down the directory tree
+find_env_file() {
+    local start_dir="$(pwd)"
+    local current_dir="$start_dir"
+    
+    # First, search UP the directory tree (current and parent directories)
+    while [ "$current_dir" != "/" ]; do
+        if [ -f "$current_dir/.env-mcp" ]; then
+            echo "$current_dir/.env-mcp"
+            return 0
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    
+    # Check root directory
+    if [ -f "/.env-mcp" ]; then
+        echo "/.env-mcp"
+        return 0
+    fi
+    
+    # If not found going up, search DOWN from the starting directory
+    # Look for .env-mcp in subdirectories (up to 3 levels deep for performance)
+    local found_file
+    found_file=$(find "$start_dir" -maxdepth 3 -name ".env-mcp" -type f 2>/dev/null | head -1)
+    
+    if [ -n "$found_file" ]; then
+        echo "$found_file"
+        return 0
+    fi
+    
+    return 1
+}
+
 check_env_file() {
-    if [ ! -f ".env-mcp" ]; then
-        print_error ".env-mcp file not found in current directory"
+    ENV_FILE_PATH=$(find_env_file)
+    if [ $? -ne 0 ]; then
+        print_error ".env-mcp file not found in current directory or any parent directories"
         print_status "Please create .env-mcp file with your environment variables"
         print_status "You can copy from .env-mcp.example as a starting point"
         exit 1
     fi
+    print_status "Found .env-mcp at: $ENV_FILE_PATH"
 }
 
 load_env() {
-    print_status "Loading environment variables from .env-mcp..."
-    set -a && source .env-mcp && set +a
+    print_status "Loading environment variables from $ENV_FILE_PATH..."
+    set -a && source "$ENV_FILE_PATH" && set +a
     print_success "Environment variables loaded successfully"
 }
 
