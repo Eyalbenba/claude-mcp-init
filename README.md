@@ -1,5 +1,11 @@
 # Claude Code MCP Configuration Manager
 
+> **⭐ This repo helped you? Consider giving it a star!** ⭐
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/eyal-ben-barouch-007-1a2b3c4d5/)
+
 A lightweight CLI for configuring Model Context Protocol (MCP) servers with Claude Code.
 
 ## Table of Contents
@@ -22,7 +28,7 @@ A lightweight CLI for configuring Model Context Protocol (MCP) servers with Clau
 - 🔄 **Server Management** - List, remove, and check status of configured servers
 - 🔐 **Secure Configuration** - Environment-based API key management
 
-## Supported MCP Servers
+## Current Supported MCP Servers
 
 | Server | Description | Requirements |
 |--------|-------------|--------------|
@@ -68,38 +74,6 @@ A lightweight CLI for configuring Model Context Protocol (MCP) servers with Clau
 | `claude-mcp remove` | Remove MCP servers |
 | `claude-mcp help` | Show help information |
 
-## Environment Variables
-
-Required in `.env-mcp` file:
-
-```bash
-# AWS (for CloudWatch)
-AWS_PROFILE=your-profile
-AWS_REGION=us-east-1
-
-# API Keys (optional, based on servers you want)
-GITHUB_PAT=your-github-token
-NOTION_API_KEY=your-notion-key
-TAVILY_API_KEY=your-tavily-key
-OPENAI_API_KEY=your-openai-key
-
-# Database connections (optional)
-SNOWFLAKE_ACCOUNT=your-account
-SNOWFLAKE_USER=your-user
-SNOWFLAKE_PASSWORD=your-password
-MDB_MCP_CONNECTION_STRING=your-mongodb-uri
-```
-
-## File Structure
-
-```
-src/mcp-setup/
-├── claude-mcp                 # Interactive CLI tool
-├── install-claude-mcp.sh      # Installation script
-└── zen-mcp-server/           # Advanced AI workflow server
-
-.env-mcp                       # Your API keys (gitignored)
-```
 
 ## Troubleshooting
 
@@ -182,7 +156,6 @@ We welcome contributions! 🎉 Here's how to get started:
    claude-mcp configure # Should allow configuring it
    ```
 
-**Reference:** See the Context7 integration as a complete example.
 
 </details>
 
