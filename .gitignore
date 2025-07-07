@@ -10,6 +10,11 @@ src/mcp-setup/.env-mcp
 src/mcp-setup/zen-mcp-server/
 *.log
 
+# Local MCP configuration and temporary files
+.mcp.json
+fix-global-mcp-config.sh
+reddit-post.md
+
 # OS
 .DS_Store
 Thumbs.db

@@ -302,8 +302,13 @@ find_env_file() {
 }
 
 check_env_file() {
+    # Temporarily disable exit on error for find_env_file
+    set +e
     ENV_FILE_PATH=$(find_env_file)
-    if [ $? -ne 0 ]; then
+    local find_result=$?
+    set -e
+    
+    if [ $find_result -ne 0 ]; then
         print_error ".env-mcp file not found in current directory or any parent directories"
         print_status "Please create .env-mcp file with your environment variables"
         print_status "You can copy from .env-mcp.example as a starting point"
@@ -759,8 +764,8 @@ configure_interrupt_server() {
 # =============================================================================
 
 cmd_configure() {
-    print_header
     check_env_file
+    print_header
     load_env
     
     # Setup package manager based on environment preference or user choice
@@ -915,8 +920,8 @@ cmd_remove() {
 }
 
 cmd_status() {
-    print_header
     check_env_file
+    print_header
     load_env
     
     print_step "MCP Server Status Check:"
